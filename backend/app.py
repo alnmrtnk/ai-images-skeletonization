@@ -15,14 +15,11 @@ app = FastAPI(
 
 # CORS configuration
 allowed_origins = [
-    "http://localhost:4200",
-    "https://alnmrtnk.github.io",
-    "https://ai-images-skeletonization.vercel.app",  # Якщо використовуєш Vercel
+    "http://localhost:4200"
 ]
 
-# In production, you might want to add your actual frontend domain
 if os.getenv("ENVIRONMENT") == "production":
-    allowed_origins.append("https://your-production-domain.com")
+    allowed_origins.append("https://alnmrtnk.github.io/ai-images-skeletonization/")
 
 app.add_middleware(
     CORSMiddleware,

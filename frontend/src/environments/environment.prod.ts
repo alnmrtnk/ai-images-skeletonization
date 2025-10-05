@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://your-backend-url.onrender.com'  // Замініть на ваш реальний URL бекенду
+  apiUrl: 'https://ai-images-skeletonization.onrender.com'
 };
