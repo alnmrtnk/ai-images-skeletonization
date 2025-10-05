@@ -15,7 +15,8 @@ app = FastAPI(
 
 # CORS configuration
 allowed_origins = [
-    "http://localhost:4200"
+    "http://localhost:4200",
+    "https://alnmrtnk.github.io"
 ]
 
 if os.getenv("ENVIRONMENT") == "production":
