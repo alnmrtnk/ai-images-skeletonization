@@ -6,13 +6,16 @@ on:
   pull_request:
     branches: [ main ]
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Build job
   build:
     runs-on: ubuntu-latest
     steps:
@@ -36,25 +39,17 @@ jobs:
           cd frontend
           npm run build -- --configuration production --base-href="/ai-images-skeletonization/"
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './frontend/dist/frontend'
 
-  # Deployment job
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-       contents: read
-       pages: write
-       id-token: write
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
