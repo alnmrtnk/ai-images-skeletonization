@@ -1,0 +1,49 @@
+<div class="modal-overlay" *ngIf="isVisible" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ 'IMAGE_INFO.TITLE' | translate }}</h3>
+      <button class="modal-close" (click)="closeModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="imageInfo">
+      <div class="info-grid">
+        <div class="info-item">
+          <strong>{{ 'IMAGE_INFO.FILENAME' | translate }}:</strong>
+          <span>{{ imageInfo.name }}</span>
+        </div>
+        <div class="info-item">
+          <strong>{{ 'IMAGE_INFO.EXTENSION' | translate }}:</strong>
+          <span>{{ imageInfo.extension }}</span>
+        </div>
+        <div class="info-item">
+          <strong>{{ 'IMAGE_INFO.TYPE' | translate }}:</strong>
+          <span>{{ imageInfo.type }}</span>
+        </div>
+        <div class="info-item">
+          <strong>{{ 'IMAGE_INFO.FILE_SIZE' | translate }}:</strong>
+          <span>{{ formatFileSize(imageInfo.size) }}</span>
+        </div>
+        <div class="info-item">
+          <strong>{{ 'IMAGE_INFO.RESOLUTION' | translate }}:</strong>
+          <span>{{ imageInfo.dimensions }}</span>
+        </div>
+        <div class="info-item">
+          <strong>{{ 'IMAGE_INFO.WIDTH' | translate }}:</strong>
+          <span>{{ imageInfo.width }} {{ 'IMAGE_INFO.PIXELS' | translate }}</span>
+        </div>
+        <div class="info-item">
+          <strong>{{ 'IMAGE_INFO.HEIGHT' | translate }}:</strong>
+          <span>{{ imageInfo.height }} {{ 'IMAGE_INFO.PIXELS' | translate }}</span>
+        </div>
+        <div class="info-item">
+          <strong>{{ 'IMAGE_INFO.LAST_MODIFIED' | translate }}:</strong>
+          <span>{{ imageInfo.lastModified | date:'medium' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

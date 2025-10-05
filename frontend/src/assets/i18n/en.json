@@ -1,0 +1,75 @@
+{
+  "APP": {
+    "TITLE": "Hilditch Image Skeletonizer",
+    "SUBTITLE": "Professional tool for image skeletonization with visualization of branching points and endpoints",
+    "FOOTER": "© 2025 Hilditch Image Skeletonizer - Advanced tool for image processing and analysis"
+  },
+  "FILE_UPLOAD": {
+    "TITLE": "Upload image for skeletonization",
+    "DESCRIPTION": "Choose an image to process with Hilditch algorithm. Supported formats: JPEG, PNG, BMP (up to 10MB)",
+    "DRAG_DROP_TITLE": "Drag and drop image file here",
+    "DRAG_DROP_SUBTITLE": "or click to select file from computer",
+    "SUPPORTED_FORMATS": "Supported: JPEG, PNG, BMP • Maximum 10MB",
+    "PREVIEW_ALT": "Image preview",
+    "SHOW_INFO": "Detailed image information",
+    "FILE_SIZE": "File size",
+    "REMOVE_FILE": "Remove selected image",
+    "REMOVE_BUTTON": "Remove image",
+    "START_PROCESSING": "Start image skeletonization",
+    "START_BUTTON": "Start skeletonization",
+    "PROCESSING": "Processing skeletonization...",
+    "RESET_TOOLTIP": "Clear all data and start over",
+    "RESET_BUTTON": "Clear and start over"
+  },
+  "PROGRESS": {
+    "UPLOAD": "Upload",
+    "CONVERSION": "Convert",
+    "SKELETONIZATION": "Skeletonize",
+    "PREPARING": "Preparing for image skeletonization...",
+    "UPLOADING": "Uploading image to server...",
+    "CONVERTING": "Converting to monochrome format...",
+    "SKELETONIZING": "Applying Hilditch algorithm for skeletonization...",
+    "ANALYZING": "Identifying branching points and endpoints...",
+    "COMPLETED": "Skeletonization completed successfully! Result ready for download.",
+    "SUCCESS": "Done! Skeleton successfully built with branching points."
+  },
+  "RESULTS": {
+    "TITLE": "Skeletonization result",
+    "DESCRIPTION": "Image skeleton with marked branching points and line endpoints",
+    "ORIGINAL": "Original image",
+    "PROCESSED": "Skeletonized image",
+    "ORIGINAL_ALT": "Original image",
+    "PROCESSED_ALT": "Skeletonization result",
+    "DOWNLOAD_TITLE": "Download result",
+    "DOWNLOAD_PNG": "Download in PNG format (high quality)",
+    "DOWNLOAD_JPG": "Download in JPG format (compressed)",
+    "DOWNLOAD_BMP": "Download in BMP format"
+  },
+  "IMAGE_INFO": {
+    "TITLE": "Detailed image information",
+    "FILENAME": "File name",
+    "EXTENSION": "Extension",
+    "TYPE": "File type",
+    "FILE_SIZE": "File size",
+    "RESOLUTION": "Resolution",
+    "WIDTH": "Width",
+    "HEIGHT": "Height",
+    "LAST_MODIFIED": "Last modified",
+    "PIXELS": "pixels",
+    "UNKNOWN": "UNKNOWN"
+  },
+  "ERRORS": {
+    "INVALID_FILE_TYPE": "Please select an image file (JPEG, PNG, BMP)",
+    "FILE_TOO_LARGE": "File size should not exceed 10MB",
+    "NO_FILE_SELECTED": "Please select a file for processing",
+    "CONNECTION_FAILED": "Cannot connect to server. Check if backend is running.",
+    "INVALID_FILE_FORMAT": "Invalid file format or corrupted image.",
+    "FILE_TOO_LARGE_SERVER": "File is too large. Maximum size: 10MB.",
+    "SERVER_ERROR": "Server error during image processing.",
+    "UNKNOWN_ERROR": "An unknown error occurred. Please try again."
+  },
+  "LANGUAGE": {
+    "SWITCH_TO_ENGLISH": "English",
+    "SWITCH_TO_UKRAINIAN": "Українська"
+  }
+}

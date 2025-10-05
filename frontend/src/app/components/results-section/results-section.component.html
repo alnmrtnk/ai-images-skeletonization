@@ -1,0 +1,76 @@
+<div class="results-section fade-in" *ngIf="isVisible">
+  <h2 class="section-title">
+    <svg class="section-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 11H15M9 15H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L19.7071 9.70711C19.8946 9.89464 20 10.149 20 10.4142V19C20 20.1046 19.1046 21 17 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{ 'RESULTS.TITLE' | translate }}
+  </h2>
+  <p class="section-description">
+    {{ 'RESULTS.DESCRIPTION' | translate }}
+  </p>
+
+  <div class="image-comparison">
+    <div class="image-container">
+      <h3 class="image-title">{{ 'RESULTS.ORIGINAL' | translate }}</h3>
+      <div class="image-wrapper">
+        <img [src]="originalImageUrl" [alt]="'RESULTS.ORIGINAL_ALT' | translate" class="result-image" />
+      </div>
+    </div>
+    
+    <div class="image-container">
+      <h3 class="image-title">{{ 'RESULTS.PROCESSED' | translate }}</h3>
+      <div class="image-wrapper">
+        <img [src]="processedImageUrl" [alt]="'RESULTS.PROCESSED_ALT' | translate" class="result-image" />
+      </div>
+    </div>
+  </div>
+
+  <div class="result-actions">
+    <div class="download-options">
+      <h4>{{ 'RESULTS.DOWNLOAD_TITLE' | translate }}:</h4>
+      <div class="format-buttons">
+        <button 
+          class="btn btn-primary btn-format"
+          (click)="onDownload('png')"
+          type="button"
+          [title]="'RESULTS.DOWNLOAD_PNG' | translate"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          PNG
+        </button>
+        
+        <button 
+          class="btn btn-secondary btn-format"
+          (click)="onDownload('jpg')"
+          type="button"
+          [title]="'RESULTS.DOWNLOAD_JPG' | translate"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          JPG
+        </button>
+        
+        <button 
+          class="btn btn-secondary btn-format"
+          (click)="onDownload('bmp')"
+          type="button"
+          [title]="'RESULTS.DOWNLOAD_BMP' | translate"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          BMP
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

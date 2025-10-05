@@ -1,0 +1,28 @@
+<div class="app-container">
+  <header class="app-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="header-main">
+          <h1 class="app-title">
+            <svg class="app-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 17H7C4.79086 17 3 15.2091 3 13V11C3 8.79086 4.79086 7 7 7H9M15 17H17C19.2091 17 21 15.2091 21 13V11C21 8.79086 19.2091 7 17 7H15M12 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            {{ 'APP.TITLE' | translate }}
+          </h1>
+          <p class="app-subtitle">
+            {{ 'APP.SUBTITLE' | translate }}
+          </p>
+        </div>
+        <app-language-switcher></app-language-switcher>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="container">
+      <div class="main-card card">
+        <app-skeleton></app-skeleton>
+      </div>
+    </div>
+  </main>
+</div>

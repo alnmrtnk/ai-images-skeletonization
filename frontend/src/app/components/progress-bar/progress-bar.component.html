@@ -1,0 +1,22 @@
+<div class="progress-section" *ngIf="isVisible">
+  <div class="progress-container">
+    <div class="progress-bar" [style.width.%]="progress">
+      <span class="progress-percentage">{{progress | number:'1.0-0'}}%</span>
+    </div>
+  </div>
+  <p class="progress-text">{{ progressText }}</p>
+  <div class="progress-steps">
+    <div class="step" [class.active]="progress >= 10" [class.completed]="progress > 30">
+      <span class="step-icon">1</span>
+      <span class="step-text">{{ 'PROGRESS.UPLOAD' | translate }}</span>
+    </div>
+    <div class="step" [class.active]="progress >= 30" [class.completed]="progress > 60">
+      <span class="step-icon">2</span>
+      <span class="step-text">{{ 'PROGRESS.CONVERSION' | translate }}</span>
+    </div>
+    <div class="step" [class.active]="progress >= 60" [class.completed]="progress >= 100">
+      <span class="step-icon">3</span>
+      <span class="step-text">{{ 'PROGRESS.SKELETONIZATION' | translate }}</span>
+    </div>
+  </div>
+</div>

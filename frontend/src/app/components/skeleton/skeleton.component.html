@@ -1,0 +1,33 @@
+<div class="skeleton-container">
+  <app-file-upload
+    [selectedFile]="selectedFile"
+    [previewUrl]="previewUrl"
+    [error]="error"
+    [imageInfo]="imageInfo"
+    [isProcessing]="isProcessing"
+    (fileSelected)="handleFileSelected($event)"
+    (fileRemoved)="handleFileRemoved()"
+    (uploadRequested)="onUpload()"
+    (resetRequested)="reset()"
+    (imageInfoToggle)="toggleImageInfo()"
+  ></app-file-upload>
+
+  <app-progress-bar
+    [isVisible]="isProcessing"
+    [progress]="progress"
+    [progressText]="progressText"
+  ></app-progress-bar>
+
+  <app-results-section
+    [isVisible]="!!processedImage"
+    [originalImageUrl]="previewUrl"
+    [processedImageUrl]="processedImage"
+    (downloadRequested)="downloadResultInFormat($event)"
+  ></app-results-section>
+
+  <app-image-info-modal
+    [isVisible]="showImageInfo"
+    [imageInfo]="imageInfo"
+    (close)="closeImageInfo()"
+  ></app-image-info-modal>
+</div>

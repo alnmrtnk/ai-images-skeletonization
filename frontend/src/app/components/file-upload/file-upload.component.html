@@ -1,0 +1,118 @@
+<div class="upload-section">
+  <h2 class="section-title">
+    <svg class="section-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10 9H9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{ 'FILE_UPLOAD.TITLE' | translate }}
+  </h2>
+  <p class="section-description">
+    {{ 'FILE_UPLOAD.DESCRIPTION' | translate }}
+  </p>
+
+  <div 
+    class="drop-zone"
+    [class.drag-over]="isDragOver"
+    [class.has-file]="selectedFile"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="fileInput.click()"
+  >
+    <input 
+      #fileInput
+      type="file" 
+      accept="image/*"
+      (change)="onFileSelected($event)"
+      class="file-input"
+    />
+    
+    <div class="drop-content" *ngIf="!selectedFile">
+      <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h3 class="drop-title">{{ 'FILE_UPLOAD.DRAG_DROP_TITLE' | translate }}</h3>
+      <p class="drop-subtitle">{{ 'FILE_UPLOAD.DRAG_DROP_SUBTITLE' | translate }}</p>
+      <span class="drop-formats">{{ 'FILE_UPLOAD.SUPPORTED_FORMATS' | translate }}</span>
+    </div>
+
+    <div class="file-preview" *ngIf="selectedFile">
+      <img [src]="previewUrl" [alt]="'FILE_UPLOAD.PREVIEW_ALT' | translate" class="preview-image" />
+      <div class="file-info">
+        <div class="file-header">
+          <h3 class="file-name">{{ selectedFile.name }}</h3>
+          <button 
+            class="btn-info"
+            (click)="toggleImageInfo($event)"
+            type="button"
+            [title]="'FILE_UPLOAD.SHOW_INFO' | translate"
+            *ngIf="imageInfo"
+          >
+            <svg class="info-icon" viewBox="0 0 512 512" fill="currentColor">
+              <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>
+            </svg>
+          </button>
+        </div>
+        <p class="file-size">{{ 'FILE_UPLOAD.FILE_SIZE' | translate }}: {{ formatFileSize(selectedFile.size) }}</p>
+        <button 
+          class="btn btn-secondary btn-sm remove-file-btn"
+          (click)="removeFile($event)"
+          type="button"
+          [title]="'FILE_UPLOAD.REMOVE_FILE' | translate"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ 'FILE_UPLOAD.REMOVE_BUTTON' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="error fade-in" *ngIf="error">
+    <svg class="error-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{ error }}
+  </div>
+
+  <div class="action-buttons">
+    <button 
+      class="btn btn-primary process-btn"
+      [disabled]="!selectedFile || isProcessing"
+      (click)="onUpload()"
+      type="button"
+      [title]="'FILE_UPLOAD.START_PROCESSING' | translate"
+    >
+      <div class="spinner" *ngIf="isProcessing"></div>
+      <svg *ngIf="!isProcessing" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      {{ isProcessing ? ('FILE_UPLOAD.PROCESSING' | translate) : ('FILE_UPLOAD.START_BUTTON' | translate) }}
+    </button>
+    
+    <button 
+      class="btn btn-secondary reset-btn"
+      [disabled]="isProcessing"
+      (click)="onReset()"
+      type="button"
+      [title]="'FILE_UPLOAD.RESET_TOOLTIP' | translate"
+      *ngIf="selectedFile"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 4V10H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20.49 9C19.9828 7.56678 19.1209 6.28392 17.9845 5.27302C16.8482 4.26212 15.4745 3.55834 13.9917 3.22454C12.5089 2.89075 10.9652 2.93663 9.50481 3.35874C8.04437 3.78086 6.71475 4.56479 5.64 5.64L1 10M23 14L18.36 18.36C17.2853 19.4352 15.9556 20.2191 14.4952 20.6413C13.0348 21.0634 11.4911 21.1093 10.0083 20.7755C8.52547 20.4417 7.1518 19.7379 6.01547 18.727C4.87913 17.7161 4.01717 16.4332 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      {{ 'FILE_UPLOAD.RESET_BUTTON' | translate }}
+    </button>
+  </div>
+</div>

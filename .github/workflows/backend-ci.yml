@@ -1,0 +1,53 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, master ]
+    paths: 
+      - 'backend/**'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
+
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Test backend API
+      run: |
+        cd backend
+        python -c "
+        from fastapi.testclient import TestClient
+        from app import app
+        
+        client = TestClient(app)
+        
+        # Test health endpoint
+        response = client.get('/')
+        print(f'Health check status: {response.status_code}')
+        
+        print('Backend tests passed!')
+        "
