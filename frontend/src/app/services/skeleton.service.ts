@@ -1,12 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpHeaders,
+} from '@angular/common/http';
 import { Observable, throwError, timeout } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class SkeletonService {
-  private readonly apiUrl = `${environment.apiUrl}/skeletonize`;
+  private readonly apiUrl = `${environment.apiUrl}/Skeleton`;
   private readonly requestTimeout = 120000;
   private readonly maxRetries = 2;
 
@@ -22,32 +26,34 @@ export class SkeletonService {
     }
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('image', file);
 
     const headers = new HttpHeaders({
-      'Accept': 'image/*,application/octet-stream'
+      Accept: 'image/*,application/octet-stream',
     });
 
-    return this.http.post(this.apiUrl, formData, { 
-      headers,
-      responseType: 'blob',
-      reportProgress: true,
-      observe: 'body'
-    }).pipe(
-      timeout(this.requestTimeout),
-      retry(this.maxRetries),
-      catchError(this.handleError.bind(this))
-    );
+    return this.http
+      .post(`${this.apiUrl}/skeletonize`, formData, {
+        headers,
+        responseType: 'blob',
+        reportProgress: true,
+        observe: 'body',
+      })
+      .pipe(
+        timeout(this.requestTimeout),
+        retry(this.maxRetries),
+        catchError(this.handleError.bind(this))
+      );
   }
 
   private isValidImageFile(file: File): boolean {
     const validTypes = [
       'image/jpeg',
-      'image/jpg', 
+      'image/jpg',
       'image/png',
       'image/bmp',
       'image/gif',
-      'image/webp'
+      'image/webp',
     ];
     return validTypes.includes(file.type.toLowerCase());
   }
@@ -60,7 +66,8 @@ export class SkeletonService {
     } else {
       switch (error.status) {
         case 0:
-          errorMessage = 'Unable to connect to server. Please check if the backend is running.';
+          errorMessage =
+            'Unable to connect to server. Please check if the backend is running.';
           break;
         case 400:
           errorMessage = 'Bad request. Please check your image file format.';
@@ -69,7 +76,8 @@ export class SkeletonService {
           errorMessage = 'File too large. Maximum size is 10MB.';
           break;
         case 415:
-          errorMessage = 'Unsupported media type. Please use JPEG, PNG, or BMP format.';
+          errorMessage =
+            'Unsupported media type. Please use JPEG, PNG, or BMP format.';
           break;
         case 422:
           errorMessage = 'Invalid image data. Please try a different image.';
@@ -78,7 +86,8 @@ export class SkeletonService {
           errorMessage = 'Server error occurred while processing the image.';
           break;
         case 503:
-          errorMessage = 'Service temporarily unavailable. Please try again later.';
+          errorMessage =
+            'Service temporarily unavailable. Please try again later.';
           break;
         case 504:
           errorMessage = 'Request timeout. The image processing took too long.';
@@ -93,9 +102,13 @@ export class SkeletonService {
   }
 
   checkServiceHealth(): Observable<any> {
-    return this.http.get(`${this.apiUrl.replace('/skeletonize', '/health')}`).pipe(
-      timeout(5000),
-      catchError(() => throwError(() => new Error('Service is not available')))
-    );
+    return this.http
+      .get(`${this.apiUrl.replace('/skeletonize', '/health')}`)
+      .pipe(
+        timeout(5000),
+        catchError(() =>
+          throwError(() => new Error('Service is not available'))
+        )
+      );
   }
 }
