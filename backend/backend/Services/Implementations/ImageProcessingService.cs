@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using System.Collections.Concurrent;
 
 namespace backend.Services.Implementations
 {
@@ -22,11 +23,9 @@ namespace backend.Services.Implementations
             {
                 using var image = await Image.LoadAsync<Rgba32>(imageStream);
 
-                // Enhance contrast for cleaner edges
                 image.Mutate(ctx => ctx.Contrast(1.5f));
 
                 var gray = ConvertToGrayscale(image);
-
                 var binary = Binarize(gray);
                 binary = MorphologicalClose(binary, 1);
 
@@ -50,14 +49,13 @@ namespace backend.Services.Implementations
             }
         }
 
-        // --- Step 1: Grayscale ---
         private Image<Rgba32> ConvertToGrayscale(Image<Rgba32> image)
         {
             var clone = image.Clone(ctx => ctx.Grayscale());
             return clone;
         }
 
-        // --- Step 2: Adaptive binarization with improved threshold ---
+        // Sequential binarization (ProcessPixelRows doesn't support Parallel)
         private Image<Rgba32> Binarize(Image<Rgba32> gray)
         {
             var result = gray.Clone();
@@ -71,9 +69,7 @@ namespace backend.Services.Implementations
                     for (int x = 0; x < row.Length; x++)
                     {
                         var v = (row[x].R + row[x].G + row[x].B) / 3;
-                        row[x] = v < threshold
-                            ? Color.Black
-                            : Color.White;
+                        row[x] = v < threshold ? Color.Black : Color.White;
                     }
                 }
             });
@@ -81,10 +77,17 @@ namespace backend.Services.Implementations
             return result;
         }
 
-        // --- Step 3: Otsu threshold calculation ---
+        // PARALLELIZED: Otsu threshold calculation
         private int ComputeOtsuThreshold(Image<Rgba32> img)
         {
             long[] hist = new long[256];
+            var lockObj = new object();
+
+            // Extract pixel data first
+            int width = img.Width;
+            int height = img.Height;
+            var pixelValues = new byte[height, width];
+
             img.ProcessPixelRows(accessor =>
             {
                 for (int y = 0; y < accessor.Height; y++)
@@ -92,13 +95,31 @@ namespace backend.Services.Implementations
                     var row = accessor.GetRowSpan(y);
                     for (int x = 0; x < row.Length; x++)
                     {
-                        int v = (row[x].R + row[x].G + row[x].B) / 3;
-                        hist[v]++;
+                        pixelValues[y, x] = (byte)((row[x].R + row[x].G + row[x].B) / 3);
                     }
                 }
             });
 
-            long total = img.Width * img.Height;
+            // Now parallel histogram computation
+            Parallel.For(0, height, () => new long[256],
+                (y, loop, localHist) =>
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        localHist[pixelValues[y, x]]++;
+                    }
+                    return localHist;
+                },
+                localHist =>
+                {
+                    lock (lockObj)
+                    {
+                        for (int i = 0; i < 256; i++)
+                            hist[i] += localHist[i];
+                    }
+                });
+
+            long total = width * height;
             long sum = 0;
             for (int i = 0; i < 256; i++) sum += i * hist[i];
 
@@ -125,10 +146,9 @@ namespace backend.Services.Implementations
                 }
             }
 
-            return (int)(threshold * 0.85); // Reduce threshold slightly to capture more detail
+            return (int)(threshold * 0.85);
         }
 
-        // --- Step 3.5: Morphological operations ---
         private Image<Rgba32> MorphologicalClose(Image<Rgba32> binary, int iterations)
         {
             var result = binary.Clone();
@@ -142,19 +162,21 @@ namespace backend.Services.Implementations
             return result;
         }
 
+        // PARALLELIZED: Dilation using direct pixel access
         private Image<Rgba32> Dilate(Image<Rgba32> binary)
         {
             var result = binary.Clone();
+            int width = binary.Width;
+            int height = binary.Height;
 
-            for (int y = 1; y < binary.Height - 1; y++)
+            Parallel.For(1, height - 1, y =>
             {
-                for (int x = 1; x < binary.Width - 1; x++)
+                for (int x = 1; x < width - 1; x++)
                 {
-                    if (binary[x, y].R < 128) continue; // Already black
+                    if (binary[x, y].R < 128) continue;
 
-                    // Check 8-neighborhood
                     bool hasBlackNeighbor = false;
-                    for (int dy = -1; dy <= 1; dy++)
+                    for (int dy = -1; dy <= 1 && !hasBlackNeighbor; dy++)
                     {
                         for (int dx = -1; dx <= 1; dx++)
                         {
@@ -165,7 +187,6 @@ namespace backend.Services.Implementations
                                 break;
                             }
                         }
-                        if (hasBlackNeighbor) break;
                     }
 
                     if (hasBlackNeighbor)
@@ -173,24 +194,26 @@ namespace backend.Services.Implementations
                         result[x, y] = Color.Black;
                     }
                 }
-            }
+            });
 
             return result;
         }
 
+        // PARALLELIZED: Erosion using direct pixel access
         private Image<Rgba32> Erode(Image<Rgba32> binary)
         {
             var result = binary.Clone();
+            int width = binary.Width;
+            int height = binary.Height;
 
-            for (int y = 1; y < binary.Height - 1; y++)
+            Parallel.For(1, height - 1, y =>
             {
-                for (int x = 1; x < binary.Width - 1; x++)
+                for (int x = 1; x < width - 1; x++)
                 {
-                    if (binary[x, y].R >= 128) continue; // Already white
+                    if (binary[x, y].R >= 128) continue;
 
-                    // Check 8-neighborhood
                     bool allNeighborsBlack = true;
-                    for (int dy = -1; dy <= 1; dy++)
+                    for (int dy = -1; dy <= 1 && allNeighborsBlack; dy++)
                     {
                         for (int dx = -1; dx <= 1; dx++)
                         {
@@ -201,7 +224,6 @@ namespace backend.Services.Implementations
                                 break;
                             }
                         }
-                        if (!allNeighborsBlack) break;
                     }
 
                     if (!allNeighborsBlack)
@@ -209,24 +231,23 @@ namespace backend.Services.Implementations
                         result[x, y] = Color.White;
                     }
                 }
-            }
+            });
 
             return result;
         }
 
-        // --- Step 4: Hilditch Thinning ---
+        // PARALLELIZED: Hilditch Thinning
         private Image<Rgba32> HilditchThinning(Image<Rgba32> binary)
         {
             var bmp = binary.Clone();
             bool changed;
             int iteration = 0;
 
-            // Convert to Hilditch convention: BLACK = 1, WHITE = 0
             int width = bmp.Width;
             int height = bmp.Height;
             int[,] imageData = new int[height, width];
 
-            // Initialize: black pixels (R < 128) become 1, white pixels become 0
+            // Extract to array first
             bmp.ProcessPixelRows(accessor =>
             {
                 for (int y = 0; y < accessor.Height; y++)
@@ -243,50 +264,43 @@ namespace backend.Services.Implementations
             {
                 changed = false;
                 iteration++;
-                var toRemove = new List<(int x, int y)>();
 
-                for (int y = 1; y < height - 1; y++)
+                var toRemove = new ConcurrentBag<(int x, int y)>();
+
+                // PARALLELIZED: Pixel scanning
+                Parallel.For(1, height - 1, y =>
                 {
                     for (int x = 1; x < width - 1; x++)
                     {
-                        if (imageData[y, x] != 1) continue; // Skip white pixels
+                        if (imageData[y, x] != 1) continue;
 
-                        // Get 8-neighborhood in Hilditch order
-                        int p2 = imageData[y - 1, x];     // North
-                        int p3 = imageData[y - 1, x + 1]; // Northeast
-                        int p4 = imageData[y, x + 1];     // East
-                        int p5 = imageData[y + 1, x + 1]; // Southeast
-                        int p6 = imageData[y + 1, x];     // South
-                        int p7 = imageData[y + 1, x - 1]; // Southwest
-                        int p8 = imageData[y, x - 1];     // West
-                        int p9 = imageData[y - 1, x - 1]; // Northwest
+                        int p2 = imageData[y - 1, x];
+                        int p3 = imageData[y - 1, x + 1];
+                        int p4 = imageData[y, x + 1];
+                        int p5 = imageData[y + 1, x + 1];
+                        int p6 = imageData[y + 1, x];
+                        int p7 = imageData[y + 1, x - 1];
+                        int p8 = imageData[y, x - 1];
+                        int p9 = imageData[y - 1, x - 1];
 
-                        // Condition 1: 2 <= B(p1) <= 6
                         int B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
                         if (B < 2 || B > 6) continue;
 
-                        // Condition 2: A(p1) = 1 (connectivity number)
                         int A = GetConnectivityNumber(p2, p3, p4, p5, p6, p7, p8, p9);
                         if (A != 1) continue;
 
-                        // Condition 3: p2 * p4 * p8 = 0 OR A(p2) != 1
                         bool condition3 = (p2 * p4 * p8 == 0) ||
-                                          (GetAForNeighbor(imageData, x, y - 1) != 1); // A(p2)
-
+                                          (GetAForNeighbor(imageData, x, y - 1) != 1);
                         if (!condition3) continue;
 
-                        // Condition 4: p2 * p4 * p6 = 0 OR A(p4) != 1
                         bool condition4 = (p2 * p4 * p6 == 0) ||
-                                          (GetAForNeighbor(imageData, x + 1, y) != 1); // A(p4)
-
+                                          (GetAForNeighbor(imageData, x + 1, y) != 1);
                         if (!condition4) continue;
 
-                        // All conditions satisfied - mark for removal
                         toRemove.Add((x, y));
                     }
-                }
+                });
 
-                // Remove marked pixels
                 foreach (var (x, y) in toRemove)
                 {
                     imageData[y, x] = 0;
@@ -295,7 +309,7 @@ namespace backend.Services.Implementations
 
             } while (changed);
 
-            // Convert back to image: 1 -> black (0), 0 -> white (255)
+            // Write back to image
             bmp.ProcessPixelRows(accessor =>
             {
                 for (int y = 0; y < accessor.Height; y++)
@@ -311,7 +325,6 @@ namespace backend.Services.Implementations
             return bmp;
         }
 
-        // CORRECTED: Count 0->1 transitions (white to black)
         private int GetConnectivityNumber(int p2, int p3, int p4, int p5, int p6, int p7, int p8, int p9)
         {
             int[] neighbors = { p2, p3, p4, p5, p6, p7, p8, p9 };
@@ -319,7 +332,6 @@ namespace backend.Services.Implementations
 
             for (int i = 0; i < 8; i++)
             {
-                // Count transitions from 0 to 1 (white to black)
                 if (neighbors[i] == 0 && neighbors[(i + 1) % 8] == 1)
                     count++;
             }
@@ -327,13 +339,11 @@ namespace backend.Services.Implementations
             return count;
         }
 
-        // Calculate A value for a neighbor pixel (for conditions 3 and 4)
         private int GetAForNeighbor(int[,] imageData, int x, int y)
         {
             int height = imageData.GetLength(0);
             int width = imageData.GetLength(1);
 
-            // Boundary check
             if (x <= 0 || x >= width - 1 || y <= 0 || y >= height - 1)
                 return 0;
 
@@ -349,7 +359,7 @@ namespace backend.Services.Implementations
             return GetConnectivityNumber(p2, p3, p4, p5, p6, p7, p8, p9);
         }
 
-        // Normalize skeleton to pure black/white
+        // Sequential normalization (fast enough as is)
         private void NormalizeSkeleton(Image<Rgba32> bmp)
         {
             bmp.ProcessPixelRows(accessor =>
@@ -359,52 +369,44 @@ namespace backend.Services.Implementations
                     var row = accessor.GetRowSpan(y);
                     for (int x = 0; x < row.Length; x++)
                     {
-                        // Force pure black or pure white
                         row[x] = row[x].R < 128 ? Color.Black : Color.White;
                     }
                 }
             });
         }
 
-        // --- Step 5: Detection using crossing number (CN) ---
+        // PARALLELIZED: Endpoint and branch detection
         private void MarkEndpointsAndBranches(Image<Rgba32> bmp)
         {
-            int endpoints = 0, branches = 0;
             int width = bmp.Width;
             int height = bmp.Height;
 
-            var endpointList = new List<(int x, int y)>();
-            var branchList = new List<(int x, int y)>();
+            var endpointList = new ConcurrentBag<(int x, int y)>();
+            var branchList = new ConcurrentBag<(int x, int y)>();
 
-            for (int y = 1; y < height - 1; y++)
+            // PARALLELIZED detection
+            Parallel.For(1, height - 1, y =>
             {
                 for (int x = 1; x < width - 1; x++)
                 {
-                    // Check if this is a skeleton pixel
                     if (bmp[x, y].R >= 128) continue;
 
-                    // Get 8-neighborhood (clockwise from top)
                     int[] neighbors = new int[8];
-                    neighbors[0] = bmp[x, y - 1].R < 128 ? 1 : 0;     // N
-                    neighbors[1] = bmp[x + 1, y - 1].R < 128 ? 1 : 0; // NE
-                    neighbors[2] = bmp[x + 1, y].R < 128 ? 1 : 0;     // E
-                    neighbors[3] = bmp[x + 1, y + 1].R < 128 ? 1 : 0; // SE
-                    neighbors[4] = bmp[x, y + 1].R < 128 ? 1 : 0;     // S
-                    neighbors[5] = bmp[x - 1, y + 1].R < 128 ? 1 : 0; // SW
-                    neighbors[6] = bmp[x - 1, y].R < 128 ? 1 : 0;     // W
-                    neighbors[7] = bmp[x - 1, y - 1].R < 128 ? 1 : 0; // NW
+                    neighbors[0] = bmp[x, y - 1].R < 128 ? 1 : 0;
+                    neighbors[1] = bmp[x + 1, y - 1].R < 128 ? 1 : 0;
+                    neighbors[2] = bmp[x + 1, y].R < 128 ? 1 : 0;
+                    neighbors[3] = bmp[x + 1, y + 1].R < 128 ? 1 : 0;
+                    neighbors[4] = bmp[x, y + 1].R < 128 ? 1 : 0;
+                    neighbors[5] = bmp[x - 1, y + 1].R < 128 ? 1 : 0;
+                    neighbors[6] = bmp[x - 1, y].R < 128 ? 1 : 0;
+                    neighbors[7] = bmp[x - 1, y - 1].R < 128 ? 1 : 0;
 
-                    // Calculate Crossing Number (CN) - half the number of 0-1 transitions
                     int cn = 0;
                     for (int i = 0; i < 8; i++)
                     {
                         if (neighbors[i] == 0 && neighbors[(i + 1) % 8] == 1)
                             cn++;
                     }
-
-                    // CN = 1 means endpoint
-                    // CN = 2 means normal skeleton point
-                    // CN = 3 means branch point (junction)
 
                     if (cn == 1)
                     {
@@ -415,22 +417,20 @@ namespace backend.Services.Implementations
                         branchList.Add((x, y));
                     }
                 }
-            }
+            });
 
+            // Sequential drawing
             foreach (var (x, y) in endpointList)
             {
                 DrawCircle(bmp, x, y, 3, Color.Red);
-                endpoints++;
             }
 
             foreach (var (x, y) in branchList)
             {
                 DrawCircle(bmp, x, y, 3, Color.Blue);
-                branches++;
             }
         }
 
-        // Helper method to draw a filled circle
         private void DrawCircle(Image<Rgba32> bmp, int centerX, int centerY, int radius, Color color)
         {
             int width = bmp.Width;
