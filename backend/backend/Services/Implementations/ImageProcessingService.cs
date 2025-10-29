@@ -1,6 +1,5 @@
 using backend.Models;
 using backend.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -199,7 +198,7 @@ namespace backend.Services.Implementations
             return result;
         }
 
-        // PARALLELIZED: Erosion using direct pixel access
+        // Erosion using direct pixel access
         private Image<Rgba32> Erode(Image<Rgba32> binary)
         {
             var result = binary.Clone();
@@ -236,7 +235,7 @@ namespace backend.Services.Implementations
             return result;
         }
 
-        // PARALLELIZED: Hilditch Thinning
+        // Hilditch Thinning
         private Image<Rgba32> HilditchThinning(Image<Rgba32> binary)
         {
             var bmp = binary.Clone();
@@ -267,7 +266,7 @@ namespace backend.Services.Implementations
 
                 var toRemove = new ConcurrentBag<(int x, int y)>();
 
-                // PARALLELIZED: Pixel scanning
+                // Pixel scanning
                 Parallel.For(1, height - 1, y =>
                 {
                     for (int x = 1; x < width - 1; x++)
@@ -375,7 +374,7 @@ namespace backend.Services.Implementations
             });
         }
 
-        // PARALLELIZED: Endpoint and branch detection
+        // Endpoint and branch detection
         private void MarkEndpointsAndBranches(Image<Rgba32> bmp)
         {
             int width = bmp.Width;
@@ -384,7 +383,6 @@ namespace backend.Services.Implementations
             var endpointList = new ConcurrentBag<(int x, int y)>();
             var branchList = new ConcurrentBag<(int x, int y)>();
 
-            // PARALLELIZED detection
             Parallel.For(1, height - 1, y =>
             {
                 for (int x = 1; x < width - 1; x++)
